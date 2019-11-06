@@ -1,0 +1,35 @@
+{% extends 'layout' %}
+
+{% block title %}{{ class_name }} Horarium | FCBE{% endblock %}
+
+{% block head %}
+<meta name="description" content="View the timetable for class {{ class_name }}">
+{% endblock %}
+
+{% block body %}
+<ul id="timetables">
+	{% for timetable in timetables %}
+	<li>
+		<div>{{ timetable.day }}</div>
+		<ul>
+			<li class="titleRow">
+				<div>Time</div><div>Class</div>
+			</li>
+			{% for row in timetable.classes %}
+			<li>
+				<div>{{ row[0] }}</div>
+				<div>{{ row[1] }}</div>
+			</li>
+			{% endfor %}
+		</ul>
+	</li>
+	{% endfor %}
+</ul>
+<br>
+<button class="textButton">Forcibly Refetch</button>
+{% endblock %}
+
+{% block javascript %}
+<script src="/scripts/jquery-ui-1.12.1.custom/jquery-ui.min.js"></script>
+<script src="/scripts/timetable.js"></script>
+{% endblock %}

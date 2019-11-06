@@ -1,0 +1,61 @@
+{% extends 'layout' %}
+
+{% block title %}Install PWA | Horarium{% endblock %}
+
+{% block head %}
+<meta name="description" content="How to install PWAs">
+<style>
+h1 {
+	color: #cccccc;
+}
+
+p {
+	font-size: 1.3rem;
+}
+
+p, p + div {
+	color: #ffffff;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<h1>Install Horarium</h1>
+<hr>
+<h2>Google Chrome and most Chromium browsers</h2>
+<p>
+	On visiting <a href="/">the home page</a>, you should get an install banner
+	asking you to add it to your homescreen. If you denied that, you can
+	just click the top right menu in chrome, and click "add to homescreen".
+</p>
+<h2>Firefox on mobile</h2>
+<p>
+	It's really simple: if the site you're visiting is a PWA, firefox will show
+	a home icon in the URL bar, and all you need to do is to click that.
+</p>
+<h2>Safari on iOS</h2>
+<p>
+	This method should work on both iPads and iPhones, but make sure you're
+	in the safari app. Click the share button, then click on "add to homescreen".
+</p>
+<div>
+	While firefox on desktop supports service workers, which means you should
+	get an enhanced web experience, you can't install it like an app yet. Also,
+	on iOS, browsers other than safari aren't allowed to install PWAs, and on
+	macOS, safari doesn't support PWAs while chrome and chromium browsers do.
+</div>
+
+<h1>Screenshots</h1>
+<hr>
+<section id="screenshots">
+	<h2>Chrome on Android</h2>
+	<img src="/images/android chrome horarium home page.png" alt="Android Chrome Horarium's home page">
+	<img src="/images/android chrome menu.png" alt="Android Chrome menu">
+	<h2>Safari on iPhone</h2>
+	<img src="/images/iPhone horarium.png" alt="iOS horarium's home page">
+	<img src="/images/iPhone share menu.png" alt="iOS share menu">
+	<img src="/images/iPhone add to home screen.png" alt="iOS add to home screen">
+	<h2>Safari on iPad</h2>
+	<img src="/images/iPad share button.jpg" alt="iPad horarium's home page">
+</section>
+{% endblock %}

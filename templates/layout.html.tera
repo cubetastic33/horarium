@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>{% block title %}Horarium{% endblock %}</title>
+	<link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+	<link rel="mask-icon" href="/images/safari-pinned-tab.svg" color="#f57373">
+	<link rel="shortcut icon" href="/images/favicon.ico">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="#f57373">
+	<meta name="apple-mobile-web-app-title" content="Horarium">
+	<meta name="application-name" content="Horarium">
+	<meta name="msapplication-TileColor" content="#606060">
+	<meta name="msapplication-config" content="/images/browserconfig.xml">
+	<meta name="theme-color" content="#f57373">
+	<link rel="manifest" href="/manifest.json">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+	<link rel="stylesheet" href="/styles/main.css">
+	{% block head %}{% endblock %}
+	<!-- Global site tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-135219619-4"></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag(){dataLayer.push(arguments);}
+		gtag('js', new Date());
+		gtag('config', 'UA-135219619-4');
+	</script>
+</head>
+<body>
+<div id="stuffAboveFooter">
+	<header>
+		<h1><a href="/" class="exception">Horarium</a></h1>
+	</header>
+	<noscript>
+		You either have JavaScript disabled or your browser doesn't support it!
+		Some things might not work properly.
+	</noscript>
+	<main>
+		{% block body %}
+		{% endblock %}
+	</main>
+</div>
+<div id="toast"></div>
+<footer>
+	<div>
+		© 12019 <a href="https://en.wikipedia.org/wiki/Holocene_calendar" class="exception">HE</a>
+		| Website designed and coded by
+		<a href="https://github.com/cubetastic33" class="exception">Aravindan</a>
+	</div>
+	<iframe src="https://ghbtns.com/github-btn.html?user=cubetastic33&repo=horarium&type=star&count=true&size=large" title="GitHub repo" frameborder="0" scrolling="0" width="160px" height="30px"></iframe>
+</footer>
+</body>
+<script src="/scripts/jquery-3.4.1.min.js"></script>
+<script>
+    function showToast(message, duration = 2000) {
+        $('#toast').text(message);
+        $('#toast').slideDown(200, () => {
+            setTimeout(() => {
+                $('#toast').slideUp(200);
+            }, duration);
+        });
+    }
+</script>
+{% block javascript %}
+{% endblock %}
+</html>

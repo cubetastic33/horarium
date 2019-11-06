@@ -1,0 +1,15 @@
+{% extends 'layout' %}
+
+{% block title %}Logs | Horarium{% endblock %}
+
+{% block head %}
+<meta name="description" content="View the logs of this website">
+{% endblock %}
+
+{% block body %}
+<ul id="logs">
+{% for log in logs %}
+<li><span class="{{ log[0] }}">{{ log[1] | capitalize }}</span><div><span class="timestamp">{{ log[2] }}</span></div></li>
+{% endfor %}
+</ul>
+{% endblock %}

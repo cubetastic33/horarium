@@ -1,0 +1,18 @@
+{% extends 'layout' %}
+
+{% block title %}Application Error | Horarium{% endblock %}
+
+{% block head %}
+<style>
+p {
+	font-size: 1.3rem;
+	padding: 0 10vw;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<p>
+	If you're seeing this message, it's probably because we're fetching the new timetables. Wait for a few seconds and refresh the page, or <a href="/">return to the home page</a>.
+</p>
+{% endblock %}

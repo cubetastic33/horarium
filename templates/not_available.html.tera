@@ -1,0 +1,19 @@
+{% extends 'layout' %}
+
+{% block title %}{{ class_name }} Timetable | Horarium{% endblock %}
+
+{% block head %}
+<meta name="description" content="View the timetable for class {{ class_name }}">
+<style>
+p {
+	font-size: 1.3rem;
+	padding: 0 10vw;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<p>
+	To view class {{ class_name }}'s timetable here, please <a href="mailto:aravk33@pm.me">contact me</a>.
+</p>
+{% endblock %}

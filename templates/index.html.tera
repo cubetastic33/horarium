@@ -1,0 +1,139 @@
+{% extends 'layout' %}
+
+{% block head %}
+<meta name="description" content="Horarium, Latin for timetable, is a place where you can view the timetables of FIITJEE CBE, SPIPS, in a usable interface.">
+<style>
+	main {
+		padding: 0 !important;
+	}
+</style>
+{% endblock %}
+
+{% block body %}
+<section id="welcome">
+	<div id="welcomeContent">
+		<p>
+			Welcome to Horarium! You can view class timetables here.
+		</p>
+		<br>
+		<div id="classes">
+			{% for class_group in classes %}
+			<div>
+				{% for class_details in class_group %}
+				<a href="{{ class_details.url }}" class="button outlinedButton">{{ class_details.name }}</a>
+				{% endfor %}
+			</div>
+			{% endfor %}
+		</div>
+	</div>
+</section>
+<section id="faq">
+	<h2>FAQ</h2>
+	<hr>
+	<h3>How does this work?</h3>
+	<p>
+		This website gets the timetables from FIITJEE's servers, scrapes the
+		data from the HTML, then stores it in its own database so that it
+		function faster on later loads. This website is open source, and you can
+		view the source code
+		<a href="https://github.com/cubetastic33/horarium">here</a>.
+	</p>
+	<h3>Can I install this like an app?</h3>
+	<p>
+		Yes. This website is a Progressive Web App (PWA), which means you can
+		install and use this as an app. Visiting the site on supported browsers
+		should show a banner to add it to your home screen. Click
+		<a href="/install_pwa">here</a> for detailed instructions.
+	</p>
+	<h3>Why do the timetable pages occasionally take so long to load?</h3>
+	<p>
+		Depending on your network connection, if the pages take more than 5
+		seconds to load, it's probably because it's trying to get new timetables
+		from FIITJEE. Whenever the site finds that it doesn't have the
+		timetables you're asking for in its database, it goes over to FIITJEE's
+		servers to get them. This means that most of the time this site should
+		work fast, and only occasionally will it take time.
+	</p>
+	<h3>What languages is this written in?</h3>
+	<p>
+		The backend is written in rust, it uses a PostgreSQL database, and the
+		frontend is written in HTML, SASS (compiled to CSS), and JavaScript.
+	</p>
+	<h3>How do I contact you?</h3>
+	<p>
+		Feedback is very much appreciated. I would love to hear your feedback.
+		If you have any, or want to ask something, contact me
+		<a href="mailto:aravk33@pm.me">here</a>.
+	</p>
+</section>
+<div class="overlay"></div>
+<div id="installPwa" class="dialog">
+	<div class="dialogContent">
+		<h2>Installation</h2>
+		<p>
+			This website can be installed and used as an app. You should now be
+			prompted with a banner asking you if you want to add horarium to
+			your homescreen - if you are, respond with "Add" to install it.
+			Click <a href="/install_pwa">here</a> for more detailed instructions.
+		</p>
+		<div class="buttons">
+			<button id="closeInstallPwaDialog">Okay</button>
+		</div>
+	</div>
+</div>
+<div id="iOSInstallPwa" class="dialog">
+	<div class="dialogContent">
+		<h2>Installation</h2>
+		<p>
+			This website can be installed and used as an app. Click
+			<a href="/install_pwa">here</a> for instructions to install it.
+		</p>
+		<div class="buttons">
+			<button id="closeiOSInstallPwaDialog">Okay</button>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+<script>
+	$('#classes > div:last-child > a:last-child').click(e => {
+		e.preventDefault();
+		$('html, body').animate({ scrollTop: $('#faq').offset().top }, 800);
+	});
+	if ('serviceWorker' in navigator) {
+		window.addEventListener('load', () => {
+			navigator.serviceWorker.register('/service-worker.js')
+			.then((reg) => {
+				console.log('Service worker registered.', reg);
+			});
+		});
+	}
+	// Intercept Add to home screen dialog
+	let deferredPrompt;
+
+	if (localStorage['lastShownInstallDialog'] === undefined || ((Date.now() - localStorage['lastShownInstallDialog']) / 86400000) >= 7) {
+		window.addEventListener('beforeinstallprompt', e => {
+			// Stash the event so it can be triggered later.
+			deferredPrompt = e;
+			$('.overlay').show();
+			$('#installPwa').show('slow');
+			localStorage.setItem('lastShownInstallDialog', Date.now());
+			$('#closeInstallPwaDialog').click(() => {
+				$('#installPwa').hide('slow', () => $('.overlay').hide());
+			});
+			deferredPrompt.prompt();
+		});
+	}
+
+	// Show installation dialog on iOS
+	if (localStorage['iOSShownInstallationDialog'] === undefined && !!navigator.platform && /iPad|iPhone/.test(navigator.platform)) {
+		$('.overlay').show();
+		$('#iOSInstallPwa').show('slow');
+		localStorage.setItem('iOSShownInstallationDialog', Date.now());
+		$('#closeiOSInstallPwaDialog').click(() => {
+			$('#iOSInstallPwa').hide('slow', () => $('.overlay').hide());
+		});
+	}
+</script>
+{% endblock %}
