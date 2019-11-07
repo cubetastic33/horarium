@@ -14,7 +14,7 @@ $('button').click(() => {
 	showToast('Please wait...', 10000);
 	$.ajax({
 		type: 'POST',
-		url: '/refetch/' + window.location.pathname.split('/')[2],
+		url: '/refetch/' + window.location.pathname.split('/')[1],
 		success: result => {
 			console.log(result);
 			showToast(result, 10000);

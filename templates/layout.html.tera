@@ -42,6 +42,18 @@
 	<main>
 		{% block body %}
 		{% endblock %}
+		<div id="iOSInstallPwa" class="dialog">
+			<div class="dialogContent">
+				<h2>Installation</h2>
+				<p>
+					This website can be installed and used as an app. Click
+					<a href="/install_pwa">here</a> for instructions to install it.
+				</p>
+				<div class="buttons">
+					<button id="closeiOSInstallPwaDialog">Okay</button>
+				</div>
+			</div>
+		</div>
 	</main>
 </div>
 <div id="toast"></div>
@@ -64,6 +76,16 @@
             }, duration);
         });
     }
+
+	// Show installation dialog on iOS if opened normally and we haven't shown the dialog before
+	if (!window.matchMedia('(display-mode: standalone)').matches && localStorage['iOSShownInstallationDialog'] === undefined && navigator.platform && /iPad|iPhone/.test(navigator.platform)) {
+		$('.overlay').show();
+		$('#iOSInstallPwa').show('slow');
+		localStorage.setItem('iOSShownInstallationDialog', Date.now());
+		$('#closeiOSInstallPwaDialog').click(() => {
+			$('#iOSInstallPwa').hide('slow', () => $('.overlay').hide());
+		});
+	}
 </script>
 {% block javascript %}
 {% endblock %}

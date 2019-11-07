@@ -71,31 +71,31 @@ fn index_route() -> Template {
         classes: vec![
             vec![ClassDetails {
                 name: String::from("XI A₁"),
-                url: String::from("/timetables/xia1")
+                url: String::from("/xia1")
             },
             ClassDetails {
                 name: String::from("XI A₂"),
-                url: String::from("/timetables/xia2")
+                url: String::from("/xia2")
             }],
             vec![ClassDetails {
                 name: String::from("XI A₃"),
-                url: String::from("/timetables/xia3")
+                url: String::from("/xia3")
             },
             ClassDetails {
                 name: String::from("XI A₄"),
-                url: String::from("/timetables/xia4")
+                url: String::from("/xia4")
             }],
             vec![ClassDetails {
                 name: String::from("XI Z₁"),
-                url: String::from("/timetables/xiz1")
+                url: String::from("/xiz1")
             },
             ClassDetails {
                 name: String::from("XI Z₂"),
-                url: String::from("/timetables/xiz2")
+                url: String::from("/xiz2")
             }],
             vec![ClassDetails {
                 name: String::from("XI ESP"),
-                url: String::from("/timetables/xiesp")
+                url: String::from("/xiesp")
             },
             ClassDetails {
                 name: String::from("FAQ"),
@@ -105,7 +105,7 @@ fn index_route() -> Template {
     })
 }
 
-#[get("/timetables/<class_url>")]
+#[get("/<class_url>")]
 fn get_timetable_page(conn: State<Mutex<Connection>>, class_url: String) -> Result<Template, failure::Error> {
     if ["xia2", "xia3", "xia4", "xiz1", "xiz2"].contains(&class_url.as_ref()) {
         return Ok(Template::render("not_available", TimetableList {

@@ -81,18 +81,6 @@
 		</div>
 	</div>
 </div>
-<div id="iOSInstallPwa" class="dialog">
-	<div class="dialogContent">
-		<h2>Installation</h2>
-		<p>
-			This website can be installed and used as an app. Click
-			<a href="/install_pwa">here</a> for instructions to install it.
-		</p>
-		<div class="buttons">
-			<button id="closeiOSInstallPwaDialog">Okay</button>
-		</div>
-	</div>
-</div>
 {% endblock %}
 
 {% block javascript %}
@@ -123,16 +111,6 @@
 				$('#installPwa').hide('slow', () => $('.overlay').hide());
 			});
 			deferredPrompt.prompt();
-		});
-	}
-
-	// Show installation dialog on iOS
-	if (localStorage['iOSShownInstallationDialog'] === undefined && !!navigator.platform && /iPad|iPhone/.test(navigator.platform)) {
-		$('.overlay').show();
-		$('#iOSInstallPwa').show('slow');
-		localStorage.setItem('iOSShownInstallationDialog', Date.now());
-		$('#closeiOSInstallPwaDialog').click(() => {
-			$('#iOSInstallPwa').hide('slow', () => $('.overlay').hide());
 		});
 	}
 </script>
