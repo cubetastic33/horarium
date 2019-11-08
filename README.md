@@ -23,8 +23,8 @@ The backend is written in rust, it uses a PostgreSQL database, and the frontend 
 Feedback is very much appreciated. I would love to hear your feedback. If you have any, or want to ask something, contact me [here](mailto:aravk33@pm.me).
 
 # Screenshots
-![Home Page](https://i.imgur.com/mlhMlFl.png)
+![Home Page](https://i.imgur.com/09HTTrp.png)
 
-![Timetables Page](https://i.imgur.com/P91GDEk.png)
+![Timetables Page](https://i.imgur.com/W5Qj4ej.png)
 
-![Logs Page](https://i.imgur.com/qal9h2J.png)
+![Logs Page](https://i.imgur.com/dTfEL65.png)
