@@ -91,7 +91,7 @@ function subscribeUserToPush() {
 		});
 }
 
-if (localStorage['lastShownNotificationDialog'] === undefined || ((Date.now() - localStorage['lastShownNotificationDialog']) / 86400000) >= 7) {
+if ('Notification' in window && (localStorage['lastShownNotificationDialog'] === undefined || ((Date.now() - localStorage['lastShownNotificationDialog']) / 86400000) >= 7)) {
 	$('.overlay').show();
 	$('#notificationRequestDialog').show('slow');
 	$('#acceptNotificationRequest').click(function () {
