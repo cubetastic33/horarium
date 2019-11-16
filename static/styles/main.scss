@@ -34,6 +34,8 @@
 $primary: #ffb8b8;
 $primary-dark: #f57373;
 $primary-fg: #343434;
+$light-theme-primary: #ffebee;
+$light-theme-primary-fg: #e55353;
 
 /*
 	Media Queries
@@ -85,13 +87,122 @@ body {
 	margin: 0;
 }
 
+#light {
+	background-color: $light-theme-primary;
+	color: $light-theme-primary-fg;
+
+	header {
+		background-color: $light-theme-primary-fg;
+
+		i, a {
+			color: $light-theme-primary;
+		}
+	}
+
+	footer {
+		background-color: $light-theme-primary-fg;
+		color: $light-theme-primary;
+
+		a {
+			color: #4fc3f7;
+		}
+	}
+
+	#faq {
+		h2, h3 {
+			color: $light-theme-primary-fg;
+		}
+
+		p {
+			color: #560027;
+		}
+	}
+
+	#timetables > li {
+		background-color: #ffd8d8;
+		color: $primary-fg;
+
+		ul li {
+			-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.12), 0 1px 5px 0 rgba(0, 0, 0, 0.2);
+			box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.12), 0 1px 5px 0 rgba(0, 0, 0, 0.2);
+		}
+	}
+
+	#logs {
+		color: #2c2c2c;
+
+		.autoFetched {
+			color: #f9a825;
+		}
+
+		.forciblyFetched {
+			color: #43a047;
+		}
+
+		.insertedTimetables {
+			color: #3f51b5;
+		}
+
+		.timestamp {
+			background-color: #cecece;
+		}
+	}
+
+	a:not(.exception):not(.button) {
+		color: #43a047 !important;
+	}
+
+	button, .button {
+		background-color: $light-theme-primary-fg;
+		color: $light-theme-primary;
+	}
+
+	.textButton {
+		background-color: transparent;
+		color: $light-theme-primary-fg;
+	}
+
+	.textButton:hover {
+		background-color: #e5535324;
+	}
+
+	.outlinedButton {
+		background-color: #ffdad8;
+		color: $light-theme-primary-fg;
+		border-color: $light-theme-primary-fg;
+	}
+
+	.outlinedButton:hover {
+		background-color: $light-theme-primary-fg;
+		color: $light-theme-primary;
+		-webkit-box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+		box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+	}
+
+	.toggleSwitch {
+		label span {
+			background: #999999;
+		}
+
+		label span:before {
+			background: $light-theme-primary;
+		}
+
+		input:checked + label span {
+			background: $light-theme-primary-fg;
+		}
+	}
+}
+
 #stuffAboveFooter {
 	flex: 1 0 auto;
 }
 
 header {
 	background-color: $primary-dark;
+	display: flex;
 	height: 1.5rem;
+	justify-content: space-between;
 	padding: 1rem;
 	position: sticky;
 	top: 0;
@@ -99,15 +210,24 @@ header {
 
 	h1 {
 		font-family: Titillium Web;
-		margin: 0;
-		position: absolute;
-		top: 0.2rem;
-		left: 1rem;
+		margin-top: -0.9rem;
 
 		a {
 			color: $primary-fg;
 			text-decoration: none;
 		}
+	}
+
+	i {
+		border-radius: 100%;
+		color: $primary-fg;
+		cursor: pointer;
+		padding: 0.5rem;
+		margin: -0.5rem;
+	}
+
+	i:hover {
+		background-color: #ffffff44;
 	}
 }
 
@@ -199,6 +319,7 @@ footer {
 		color: $primary-fg;
 		margin: 1rem;
 		padding: 1rem;
+		list-style-type: none;
 
 		> div {
 			cursor: pointer;
@@ -218,11 +339,26 @@ footer {
 				-webkit-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.12), 0 1px 5px 0 rgba(0, 0, 0, 0.2);
 				box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.12), 0 1px 5px 0 rgba(0, 0, 0, 0.2);
 				list-style: none;
+				overflow-wrap: break-word;
 				margin: 0;
 				padding: 0.5rem;
 
 				div {
 					width: 50%;
+				}
+
+				.subjectName {
+					display: none;
+				}
+			}
+
+			li.showSubjectNames {
+				.classCode {
+					display: none;
+				}
+
+				.subjectName {
+					display: initial;
 				}
 			}
 
@@ -354,9 +490,9 @@ button:disabled, .button.disabled {
 	box-shadow: none;
 }
 
-.textButton, .outlinedButton {
-	background: transparent;
-	color: $primary;
+.textButton {
+	background-color: transparent;
+	color: $primary-fg;
 }
 
 .textButton:hover {
@@ -364,6 +500,8 @@ button:disabled, .button.disabled {
 }
 
 .outlinedButton {
+	background: transparent;
+	color: $primary;
 	border: 2px solid $primary;
 }
 
@@ -451,4 +589,58 @@ button:disabled, .button.disabled {
 	bottom: 0;
 	text-align: center;
 	transform: translate(-50%, 0);
+}
+
+.toggleSwitch {
+	input[type="checkbox"] {
+		display: none;
+	}
+
+	label {
+		position: relative;
+		line-height: 32px;
+		display: block;
+	}
+
+	label:before, label:after, label span:before, label span:after {
+		content: '';
+		display: block;
+		position: absolute;
+	}
+
+	label span {
+		border-radius: 16px;
+		height: 32px;
+		width: 64px;
+		position: relative;
+		cursor: pointer;
+		display: block;
+		float: right;
+	}
+
+	label span:before {
+		border-radius: 50%;
+		height: 28px;
+		width: 28px;
+		left: 2px;
+		top: 2px;
+	}
+
+	input:checked + label span:before {
+		left: 34px;
+	}
+
+	label span {
+		background: #bbbbbb;
+		transition: background 0.3s ease-in;
+	}
+
+	label span:before {
+		background: $primary-fg;
+		transition: left 0.3s ease-in;
+	}
+
+	input:checked + label span {
+		background: $primary;
+	}
 }

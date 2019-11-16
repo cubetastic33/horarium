@@ -1,4 +1,4 @@
-const CACHE_NAME = 'static-cache-v1';
+const CACHE_NAME = 'static-cache-v6';
 
 const FILES_TO_CACHE = [
 	'/',
@@ -82,4 +82,43 @@ self.addEventListener('fetch', (evt) => {
 				});
 		})
 	);
+});
+
+self.addEventListener('push', function (event) {
+	const promiseChain = self.registration.showNotification(event.data.text(), {
+		icon: '/images/favicon-32x32.png',
+		badge: '/images/badge.png',
+	});
+	event.waitUntil(promiseChain);
+});
+
+self.addEventListener('notificationclick', function (event) {
+	var clickedNotification = event.notification;
+	clickedNotification.close();
+
+	const urlToOpen = new URL('/', self.location.origin).href;
+
+	const promiseChain = clients.matchAll({
+		type: 'window',
+		includeUncontrolled: true
+	})
+	.then(function (windowClients) {
+		var matchingClient = null;
+
+		for (var i = 0; i < windowClients.length; i++) {
+			const windowClient = windowClients[i];
+			if (windowClient.url === urlToOpen) {
+				matchingClient = windowClient;
+				break;
+			}
+		}
+
+		if (matchingClient) {
+			return matchingClient.focus();
+		} else {
+			return clients.openWindow(urlToOpen);
+		}
+	});
+
+	event.waitUntil(promiseChain);
 });

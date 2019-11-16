@@ -34,6 +34,7 @@
 <div id="stuffAboveFooter">
 	<header>
 		<h1><a href="/" class="exception">Horarium</a></h1>
+		<i id="settingsButton" class="material-icons">settings</i>
 	</header>
 	<noscript>
 		You either have JavaScript disabled or your browser doesn't support it!
@@ -54,6 +55,27 @@
 				</div>
 			</div>
 		</div>
+		<div id="settingsDialog" class="dialog">
+			<div class="dialogContent">
+				<h2>Settings</h2>
+				<form>
+					<div class="formInput toggleSwitch">
+						<input type="checkbox" id="darkMode" autocomplete="off">
+						<label for="darkMode">Dark mode <span></span></label>
+					</div>
+					<br>
+					<div class="formInput toggleSwitch">
+						<input type="checkbox" id="showSubjectNames" autocomplete="off">
+						<label for="showSubjectNames">Show subject names instead of class codes <span></span></label>
+					</div>
+					<br><br>
+					<div class="buttons">
+						<button type="button" id="cancelSettingsChange" class="textButton">Cancel</button>
+						<button type="submit">Save</button>
+					</div>
+				</form>
+			</div>
+		</div>
 	</main>
 </div>
 <div id="toast"></div>
@@ -67,26 +89,7 @@
 </footer>
 </body>
 <script src="/scripts/jquery-3.4.1.min.js"></script>
-<script>
-    function showToast(message, duration = 2000) {
-        $('#toast').text(message);
-        $('#toast').slideDown(200, () => {
-            setTimeout(() => {
-                $('#toast').slideUp(200);
-            }, duration);
-        });
-    }
-
-	// Show installation dialog on iOS if opened normally and we haven't shown the dialog before
-	if (!window.matchMedia('(display-mode: standalone)').matches && localStorage['iOSShownInstallationDialog'] === undefined && navigator.platform && /iPad|iPhone/.test(navigator.platform)) {
-		$('.overlay').show();
-		$('#iOSInstallPwa').show('slow');
-		localStorage.setItem('iOSShownInstallationDialog', Date.now());
-		$('#closeiOSInstallPwaDialog').click(() => {
-			$('#iOSInstallPwa').hide('slow', () => $('.overlay').hide());
-		});
-	}
-</script>
+<script src="/scripts/main.js"></script>
 {% block javascript %}
 {% endblock %}
 </html>

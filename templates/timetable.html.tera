@@ -1,6 +1,6 @@
 {% extends 'layout' %}
 
-{% block title %}{{ class_name }} Horarium | FCBE{% endblock %}
+{% block title %}{{ class_name }} | Horarium{% endblock %}
 
 {% block head %}
 <meta name="description" content="View the timetable for class {{ class_name }}">
@@ -18,7 +18,8 @@
 			{% for row in timetable.classes %}
 			<li>
 				<div>{{ row[0] }}</div>
-				<div>{{ row[1] }}</div>
+				<div class="classCode">{{ row[1] }}</div>
+				<div class="subjectName">{{ row[2] }}</div>
 			</li>
 			{% endfor %}
 		</ul>
@@ -26,7 +27,23 @@
 	{% endfor %}
 </ul>
 <br>
-<button class="textButton">Forcibly Refetch</button>
+<button id="forciblyRefetch" class="textButton">Forcibly Refetch</button>
+<div class="overlay"></div>
+<div id="notificationRequestDialog" class="dialog">
+	<div class="dialogContent">
+		<h2>Notifications</h2>
+		<p>
+			Horarium can send you occasional notifications so you know
+			immediately once new timetables arrive, or if there's important news
+			from the school, if a day is declared as a holiday, etc., if you
+			want it to. Do you want to enable notifications?
+		</p>
+		<div class="buttons">
+			<button id="cancelNotificationRequest" class="textButton">Nope</button>
+			<button id="acceptNotificationRequest">Yup</button>
+		</div>
+	</div>
+</div>
 {% endblock %}
 
 {% block javascript %}

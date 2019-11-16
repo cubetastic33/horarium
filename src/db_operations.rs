@@ -1,5 +1,5 @@
 use super::{
-    TimetableList, Timetable, Logs, class_url_to_name, webscrape::*
+    TimetableList, Timetable, Logs, PushSubscription, class_url_to_name, webscrape::*
 };
 use chrono::prelude::*;
 use postgres::Connection;
@@ -35,6 +35,13 @@ time TIMESTAMPTZ NOT NULL DEFAULT NOW()
 SET timezone = 'Asia/Kolkata';
 */
 
+/*
+CREATE TABLE notification_subscriptions (
+id serial PRIMARY KEY,
+push_subscription VARCHAR NOT NULL
+)
+*/
+
 // Function to log actions in the database
 fn log_action(conn: &Connection, action: Action) -> Result<(), failure::Error> {
     conn.execute("INSERT INTO actions_log VALUES (DEFAULT, $1, DEFAULT)", &[&match action {
@@ -62,7 +69,7 @@ fn insert_timetables(conn: &Connection, timetable_list: TimetableList, force_ins
         }
         let mut times_and_classes = Vec::new();
         for row in timetable.classes {
-            times_and_classes.push(format!("{}={}", row.0, row.1));
+            times_and_classes.push(format!("{}={}={}", row.0, row.1, row.2));
         }
         // Insert the timetable into the database
         conn.query("INSERT INTO timetables VALUES (
@@ -101,7 +108,7 @@ pub fn get_timetables(conn: &Connection, class_url: String) -> Result<TimetableL
             let mut classes = Vec::new();
             for row in timetable.get::<_, String>(1).split("|") {
                 let time_and_class = row.split("=").collect::<Vec<_>>();
-                classes.push((time_and_class[0].to_string(), time_and_class[1].to_string()));
+                classes.push((time_and_class[0].to_string(), time_and_class[1].to_string(), time_and_class[2].to_string()));
             }
             timetables.push(Timetable {
                 day: timetable.get(0),
@@ -161,4 +168,12 @@ pub fn get_logs(conn: &Connection) -> Result<Logs, failure::Error> {
         logs.logs.push((action_as_class, log.get(1), action_time.format("1%F %T").to_string()));
     }
     Ok(logs)
+}
+
+// Function to add a notification subscription to the database
+pub fn add_notification_subscription(conn: &Connection, push_subscription: PushSubscription) -> Result<String, failure::Error> {
+    conn.execute("INSERT INTO notification_subscriptions VALUES (
+        DEFAULT, $1
+    )", &[&serde_json::to_string(&push_subscription)?])?;
+    Ok(String::from("success"))
 }

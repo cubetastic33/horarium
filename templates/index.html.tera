@@ -85,14 +85,14 @@
 
 {% block javascript %}
 <script>
-	$('#classes > div:last-child > a:last-child').click(e => {
+	$('#classes > div:last-child > a:last-child').click(function (e) {
 		e.preventDefault();
 		$('html, body').animate({ scrollTop: $('#faq').offset().top }, 800);
 	});
 	if ('serviceWorker' in navigator) {
-		window.addEventListener('load', () => {
+		window.addEventListener('load', function () {
 			navigator.serviceWorker.register('/service-worker.js')
-			.then((reg) => {
+			.then(function (reg) {
 				console.log('Service worker registered.', reg);
 			});
 		});
@@ -101,14 +101,14 @@
 	let deferredPrompt;
 
 	if (localStorage['lastShownInstallDialog'] === undefined || ((Date.now() - localStorage['lastShownInstallDialog']) / 86400000) >= 7) {
-		window.addEventListener('beforeinstallprompt', e => {
+		window.addEventListener('beforeinstallprompt', function(e) {
 			// Stash the event so it can be triggered later.
 			deferredPrompt = e;
 			$('.overlay').show();
 			$('#installPwa').show('slow');
 			localStorage.setItem('lastShownInstallDialog', Date.now());
-			$('#closeInstallPwaDialog').click(() => {
-				$('#installPwa').hide('slow', () => $('.overlay').hide());
+			$('#closeInstallPwaDialog').click(function () {
+				$('#installPwa').hide('slow', function () { $('.overlay').hide() });
 			});
 			deferredPrompt.prompt();
 		});

@@ -9,12 +9,20 @@ h1 {
 	color: #cccccc;
 }
 
+#light h1 {
+	color: #454545;
+}
+
 p {
 	font-size: 1.3rem;
 }
 
 p, p + div {
 	color: #ffffff;
+}
+
+#light p, #light p + div {
+	color: #252525;
 }
 </style>
 {% endblock %}

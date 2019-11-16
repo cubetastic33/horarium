@@ -41,7 +41,38 @@ fn construct_payload(client: &reqwest::Client, username: &str, password: &str) -
 
     for i in 3..6 {
         let selector = Selector::parse(&("#".to_string() + payload[i].0)).unwrap();
-        let value = login_page.select(&selector).next().unwrap().value().attr("value").unwrap();
+        let value = match login_page.select(&selector).next() {
+            Some(x) => x.value().attr("value").unwrap(),
+            None => return Err(failure::err_msg(format!("#{} was not found", payload[i].0))),
+        };
+        payload[i].1 = String::from(value);
+    }
+
+    Ok(payload)
+}
+
+fn construct_payload_for_enrollment_no(client: &reqwest::Client, enrollment_no: &'static str) -> Result<Vec<(&'static str, String)>, failure::Error> {
+    let mut response = client.get("https://fiitjeelogin.com/Default.aspx").headers(construct_headers()).send()?;
+    let page = Html::parse_document(&response.text()?);
+
+    let mut payload = vec![
+        ("__EVENTTARGET", String::from("ct100$ddlEnrollNo")),
+        ("__EVENTARGUMENT", String::new()),
+        ("__LASTFOCUS", String::new()),
+        ("__VIEWSTATE", String::new()),
+        ("__VIEWSTATEGENERATOR", String::new()),
+        ("__EVENTVALIDATION", String::new()),
+        ("ctl00$ddlEnrollNo", String::from(enrollment_no)),
+    ];
+
+    for i in 3..6 {
+        let selector_string = "#".to_string() + payload[i].0;
+        let selector = Selector::parse(&selector_string).unwrap();
+        let value = match page.select(&selector).next() {
+            Some(x) => x.value().attr("value").unwrap(),
+            None => return Err(failure::err_msg(format!("#{} was not found", payload[i].0))),
+        };
+        println!("{}", value);
         payload[i].1 = String::from(value);
     }
 
@@ -73,7 +104,10 @@ fn construct_payload_for_timetable(client: &reqwest::Client) -> Result<Vec<(&'st
     for i in 3..8 {
         let selector_string = "*[name=\"".to_string() + payload[i].0 + "\"]";
         let selector = Selector::parse(&selector_string).unwrap();
-        let value = timetable_page.select(&selector).next().unwrap().value().attr("value").unwrap();
+        let value = match timetable_page.select(&selector).next() {
+            Some(x) => x.value().attr("value").unwrap(),
+            None => return Err(failure::err_msg(format!("#{} was not found", payload[i].0))),
+        };
         payload[i].1 = String::from(value);
     }
 
@@ -84,21 +118,35 @@ fn minutes_to_string(minutes: usize) -> String {
     format!("{:02}:{:02}", minutes / 60, minutes % 60)
 }
 
-fn convert_code_to_subject(code: &str, double_classes: bool) -> String {
+fn fix_codes(code: &str, double_classes: bool) -> String {
     String::from(match code {
-        "MPV" | "MJG" | "MJGA" | "MJG1" => "Math",
-        "BJK" | "BJS" | "BGD" => if double_classes { "Bio / CS" } else { "Biology" }
-        "CRA" | "CVR" | "CRSA" => "Chemistry",
-        "CHEMISTRY-L" | "CHEMISTRY -L" => "Chemistry Lab",
-        "PSK" | "PGR" => "Physics",
-        "EVL" | "EVL1" | "ESB" | "EHM" => "English",
-        "IRN" | "IAP" => if double_classes { "Bio / CS" } else { "Computer Science" }
-        "PET" => "Games",
-        s => s,
+        "MJG1" => "MJG",
+        "BJK" => if double_classes { "BJK / IRN" } else { "BJK" }
+        "BJS2" => "BJS",
+        "EVL1" => "EVL",
+        "IRN" => if double_classes { "BJK / IRN" } else { "IRN" }
+        s => s
     })
 }
 
-fn extract_timetable(source: &str, double_classes: bool) -> Result<Vec<(String, Vec<(String, String)>)>, failure::Error> {
+// Function to convert class codes to subject names
+fn convert_code_to_subject(class_code: &str) -> String {
+    String::from(match class_code {
+        "MPV" | "MJG" | "MVJ" | "MMK" | "MRJ" | "MRPK" => "Math",
+        "BJK" => "Biology",
+        "BGD" => "Zoology",
+        "BJS" => "Botany",
+        "CRA" | "CVR" | "CRM" | "CRSA" => "Chemistry",
+        "PSK" | "PGR" | "PAA" | "PRB" => "Physics",
+        "EVL" | "ESB" | "EHM" => "English",
+        "IRN" | "IAP" => "Computer Science",
+        "BJK / IRN" => "Bio / CS",
+        "PET" => "Games",
+        s => s
+    })
+}
+
+fn extract_timetable(source: &str, double_classes: bool) -> Result<Vec<(String, Vec<(String, String, String)>)>, failure::Error> {
     let mut timetables = Vec::new();
     let timetable_page = Html::parse_fragment(source);
     let selector = Selector::parse("table.CSSTableGenerator").unwrap();
@@ -111,11 +159,11 @@ fn extract_timetable(source: &str, double_classes: bool) -> Result<Vec<(String, 
         for row in table.select(&Selector::parse("tr:not(:first-child)").unwrap()) {
             let time_range = row.select(&Selector::parse("td:nth-child(2)").unwrap()).next().unwrap().inner_html().replace('\n', "");
 
-            let mut class_name = row.select(&Selector::parse("td:nth-child(3)").unwrap()).next().unwrap().inner_html();
-            if class_name.len() == 0 {
-                class_name = row.select(&Selector::parse("td:nth-child(4)").unwrap()).next().unwrap().inner_html();
+            let mut class_code = row.select(&Selector::parse("td:nth-child(3)").unwrap()).next().unwrap().inner_html();
+            if class_code.len() == 0 {
+                class_code = row.select(&Selector::parse("td:nth-child(4)").unwrap()).next().unwrap().inner_html();
             }
-            class_name = convert_code_to_subject(&class_name, double_classes);
+            class_code = fix_codes(&class_code, double_classes);
 
             let times: Vec<_> = time_range.split("-").collect();
             let mut minutes1 = times[0].split(":").collect::<Vec<_>>()[0].parse::<usize>()? * 60 + times[0].split(":").collect::<Vec<_>>()[1].parse::<usize>()?;
@@ -123,29 +171,29 @@ fn extract_timetable(source: &str, double_classes: bool) -> Result<Vec<(String, 
             let mut difference = minutes2 - minutes1;
             if difference > 50 {
                 if &times[0] == &"8:30" {
-                    print_table.add_row(row!["8:30-9:20", class_name]);
-                    print_table.add_row(row!["9:20-10:00", class_name]);
-                    timetable.push((String::from("8:30-9:20"), class_name.clone()));
-                    timetable.push((String::from("9:20-10:00"), class_name.clone()));
+                    print_table.add_row(row!["8:30-9:20", class_code]);
+                    print_table.add_row(row!["9:20-10:00", class_code]);
+                    timetable.push((String::from("8:30-9:20"), class_code.clone(), convert_code_to_subject(&class_code)));
+                    timetable.push((String::from("9:20-10:00"), class_code.clone(), convert_code_to_subject(&class_code)));
                     if difference > 90 {
-                        print_table.add_row(row!["10:10-10:50", class_name.clone()]);
-                        print_table.add_row(row!["10:50-11:30", class_name.clone()]);
-                        print_table.add_row(row!["11:30-12:10", class_name.clone()]);
-                        timetable.push((String::from("10:10-10:50"), class_name.clone()));
-                        timetable.push((String::from("10:50-11:30"), class_name.clone()));
-                        timetable.push((String::from("11:30-12:10"), class_name.clone()));
+                        print_table.add_row(row!["10:10-10:50", class_code]);
+                        print_table.add_row(row!["10:50-11:30", class_code]);
+                        print_table.add_row(row!["11:30-12:10", class_code]);
+                        timetable.push((String::from("10:10-10:50"), class_code.clone(), convert_code_to_subject(&class_code)));
+                        timetable.push((String::from("10:50-11:30"), class_code.clone(), convert_code_to_subject(&class_code)));
+                        timetable.push((String::from("11:30-12:10"), class_code.clone(), convert_code_to_subject(&class_code)));
                     }
                 } else {
                     while difference > 30 {
-                        print_table.add_row(row![minutes_to_string(minutes1) + "-" + &minutes_to_string(minutes1 + 40), class_name.clone()]);
-                        timetable.push((minutes_to_string(minutes1) + "-" + &minutes_to_string(minutes1 + 40), class_name.clone()));
+                        print_table.add_row(row![minutes_to_string(minutes1) + "-" + &minutes_to_string(minutes1 + 40), class_code.clone()]);
+                        timetable.push((minutes_to_string(minutes1) + "-" + &minutes_to_string(minutes1 + 40), class_code.clone(), convert_code_to_subject(&class_code)));
                         minutes1 += 40;
                         difference -= 40;
                     }
                 }
             } else {
-                print_table.add_row(row![time_range, class_name]);
-                timetable.push((time_range, class_name));
+                print_table.add_row(row![time_range, class_code]);
+                timetable.push((time_range, class_code.clone(), convert_code_to_subject(&class_code)));
             }
         }
         timetables.push((date, timetable));
@@ -158,15 +206,15 @@ pub fn scrape_timetables(class_name: &str) -> Result<Vec<Timetable>, failure::Er
     let client = reqwest::Client::builder()
         .cookie_store(true)
         .build()?;
-    let (username, password) = match class_name {
-        "XI A₁" => ("username", "password"),
-        "XI A₂" => ("", ""),
-        "XI A₃" => ("", ""),
-        "XI A₄" => ("", ""),
-        "XI Z₁" => ("", ""),
-        "XI Z₂" => ("", ""),
-        "XI ESP" => ("username", "password"),
-        _ => ("", ""),
+    let (enrollment_no, username, password) = match class_name {
+        "XI A₁" => ("<enrollment no>", "<id>", "<password>"),
+        "XI A₂" => ("<enrollment no>", "<id>", "<password>"),
+        "XI A₃" => ("<enrollment no>", "<id>", "<password>"),
+        "XI A₄" => ("", "", ""),
+        "XI Z₁" => ("<enrollment no>", "<id>", "<password>"),
+        "XI Z₂" => ("<enrollment no>", "<id>", "<password>"),
+        "XI ESP" => ("<enrollment no>", "<id>", "<password>"),
+        _ => return Err(failure::err_msg("Invalid page")),
     };
     let params = construct_payload(&client, username, password)?;
 
@@ -181,10 +229,16 @@ pub fn scrape_timetables(class_name: &str) -> Result<Vec<Timetable>, failure::Er
         .form(&params)
         .send()?;
 
+    // Set enrollment number
+    client.post("https://fiitjeelogin.com/Default.aspx")
+        .headers(construct_headers())
+        .form(&construct_payload_for_enrollment_no(&client, enrollment_no)?)
+        .send()?;
     // Get the timetable page
     let mut res = client.post("https://fiitjeelogin.com/StudentTimeTable.aspx")
         .headers(construct_headers())
-        .form(&construct_payload_for_timetable(&client)?).send()?;
+        .form(&construct_payload_for_timetable(&client)?)
+        .send()?;
     let extracted_timetables = extract_timetable(&res.text()?, class_name == "XI ESP")?;
     let mut timetables = Vec::new();
     for date in extracted_timetables {
