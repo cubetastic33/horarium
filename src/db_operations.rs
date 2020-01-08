@@ -1,5 +1,5 @@
 use super::{
-    TimetableList, Timetable, Logs, PushSubscription, class_url_to_name, webscrape::*
+    TimetableList, Timetable, Analysis, Logs, PushSubscription, class_url_to_name, webscrape::*
 };
 use chrono::prelude::*;
 use postgres::Connection;
@@ -69,7 +69,7 @@ fn insert_timetables(conn: &Connection, timetable_list: TimetableList, force_ins
         }
         let mut times_and_classes = Vec::new();
         for row in timetable.classes {
-            times_and_classes.push(format!("{}={}={}", row.0, row.1, row.2));
+            times_and_classes.push(format!("{}={}={}={}", row.0, row.1, row.2, row.3));
         }
         // Insert the timetable into the database
         conn.query("INSERT INTO timetables VALUES (
@@ -93,24 +93,48 @@ fn insert_timetables(conn: &Connection, timetable_list: TimetableList, force_ins
 // Function to get the timetables
 pub fn get_timetables(conn: &Connection, class_url: String) -> Result<TimetableList, failure::Error> {
     let class_name = class_url_to_name(&class_url);
-    // Variable to store the timetables we want
+    // Variable to store timetables from after the start of this week
     let mut timetables = Vec::new();
+    // Variable to store this week's timetables
+    let mut this_week_timetables = Vec::new();
+    // Variable to store last week's timetables
+    let mut last_week_timetables = Vec::new();
     // Loop over all the timetables of this class in the database
     for timetable in &conn.query("SELECT day, timetable FROM timetables WHERE class_name = $1 ORDER BY id", &[&class_name])? {
         // Check whether the day this timetable is for is after the start of this week
         let now = Local::today().naive_local();
         let day = NaiveDate::parse_from_str(&timetable.get::<_, String>(0), "%A, %B %e, %Y")?;
 
-        let start_of_the_week = now - chrono::Duration::days(now.weekday().num_days_from_sunday() as i64);
+        let start_of_last_week = now - chrono::Duration::days(now.weekday().num_days_from_sunday() as i64 + 7);
+        let start_of_this_week = now - chrono::Duration::days(now.weekday().num_days_from_sunday() as i64);
+        let end_of_this_week = start_of_this_week + chrono::Duration::weeks(1);
 
-        if start_of_the_week <= day {
-            // It is after the start of the week, so add it to the timetables vector
+        if start_of_this_week <= day {
+            // It is after the start of this week, so add it to the timetables vector
             let mut classes = Vec::new();
             for row in timetable.get::<_, String>(1).split("|") {
                 let time_and_class = row.split("=").collect::<Vec<_>>();
-                classes.push((time_and_class[0].to_string(), time_and_class[1].to_string(), time_and_class[2].to_string()));
+                classes.push((time_and_class[0].to_string(), time_and_class[1].to_string(), time_and_class[2].to_string(), time_and_class[3].to_string()));
             }
             timetables.push(Timetable {
+                day: timetable.get(0),
+                classes: classes.clone(),
+            });
+            if day <= end_of_this_week {
+                this_week_timetables.push(Timetable {
+                    day: timetable.get(0),
+                    classes,
+                });
+            }
+        } else if start_of_last_week <= day {
+            // It is only after the start of last week, not this one, so add it
+            // to the vector with last week's timetables
+            let mut classes = Vec::new();
+            for row in timetable.get::<_, String>(1).split("|") {
+                let time_and_class = row.split("=").collect::<Vec<_>>();
+                classes.push((time_and_class[0].to_string(), time_and_class[1].to_string(), time_and_class[2].to_string(), time_and_class[3].to_string()));
+            }
+            last_week_timetables.push(Timetable {
                 day: timetable.get(0),
                 classes,
             });
@@ -119,18 +143,26 @@ pub fn get_timetables(conn: &Connection, class_url: String) -> Result<TimetableL
 
     // If no timetables after the start of this week were found, scrape them from fiitjeelogin
     if timetables.len() == 0 {
-        timetables.append(&mut scrape_timetables(&class_name)?);
+        let mut temp = scrape_timetables(&class_name)?;
+        timetables.append(&mut temp.clone());
+        this_week_timetables.append(&mut temp);
         log_action(conn, Action::AutoFetched)?;
         // Add the timetables to the database so we don't have to scrape them next time
         insert_timetables(conn, TimetableList {
             class_name: class_name.clone(),
             timetables: timetables.clone(),
+            analyses: None,
         }, false)?;
     }
+
+    let this_week_analyses = generate_analyses(&this_week_timetables)?;
+    println!("\n\nlast week\n\n");
+    let last_week_analyses = generate_analyses(&last_week_timetables)?;
 
     Ok(TimetableList {
         class_name,
         timetables,
+        analyses: Some([this_week_analyses, last_week_analyses]),
     })
 }
 
@@ -147,10 +179,86 @@ pub fn forcibly_fetch(conn: &Connection, class_url: String) -> String {
     if let Err(e) = insert_timetables(conn, TimetableList {
         class_name,
         timetables,
+        analyses: None,
     }, true) {
         return e.to_string();
     }
     String::from("success")
+}
+
+// Function to generate analyses from timetables
+fn generate_analyses(timetables: &Vec<Timetable>) -> Result<Vec<Analysis>, failure::Error> {
+    let mut analyses = Vec::new();
+    // Only include recognized subjects
+    let mut math = 0;
+    let mut botany = 0;
+    let mut zoology = 0;
+    let mut chemistry = 0;
+    let mut physics = 0;
+    let mut english = 0;
+    let mut computer_science = 0;
+    let mut bio_or_cs = 0;
+    let mut games = 0;
+    // Loop over each day
+    for timetable in timetables {
+        // Loop over each class
+        for class in &timetable.classes {
+            println!("\n{}", class.3);
+            *match class.3.as_ref() {
+                "Math" => &mut math,
+                "Botany" => &mut botany,
+                "Zoology" => &mut zoology,
+                "Chemistry" => &mut chemistry,
+                "Physics" => &mut physics,
+                "English" => &mut english,
+                "Computer Science" => &mut computer_science,
+                "Bio / CS" => &mut bio_or_cs,
+                "Games" => &mut games,
+                _ => continue,
+            } += {
+                // The x.trim() is for backwards compatability with previous weeks
+                let times: Vec<_> = class.0.split('-').map(|x| x.trim()).collect();
+                (NaiveTime::parse_from_str(times[1], "%H:%M")? - NaiveTime::parse_from_str(times[0], "%H:%M")?).num_minutes()
+            };
+        }
+    }
+    let subjects_list = [
+        ("Math", math),
+        ("Botany", botany),
+        ("Zoology", zoology),
+        ("Chem", chemistry),
+        ("Phy", physics),
+        ("Eng", english),
+        ("CS", computer_science),
+        ("Bio / CS", bio_or_cs),
+        ("Games", games),
+    ];
+    // subjects_list.sort_unstable_by(|a, b| b.1.cmp(&a.1));
+    for subject in &subjects_list {
+        if subject.1 > 0 {
+            /*let time = chrono::Duration::minutes(subject.1);
+            let hours = time.num_hours();
+            let minutes = time.num_minutes() - hours * 60;
+            let aggregate_time = if hours == 1 {
+                if minutes > 0 {
+                    format!("1 hour and {} minutes", minutes)
+                } else {
+                    String::from("1 hour")
+                }
+            } else {
+                if minutes > 0 {
+                    format!("{} hours and {} minutes", hours, minutes)
+                } else {
+                    format!("{} hours", hours)
+                }
+            };*/
+            analyses.push(Analysis {
+                name: subject.0.to_string(),
+                aggregate_time: subject.1,
+            });
+        }
+    }
+    Ok(analyses)
 }
 
 // Function to get the logs from the database

@@ -27,6 +27,11 @@
 	src: url(/fonts/Hind_Vadodara/HindVadodara-Medium.ttf);
 }
 
+@font-face {
+	font-family: 'B612 Mono';
+	src: url(/fonts/B612_Mono/B612Mono-Regular.ttf);
+}
+
 /*
 	Variables
 */
@@ -41,9 +46,15 @@ $light-theme-primary-fg: #e55353;
 	Media Queries
 */
 
+@media screen and (max-width: 570px) {
+	#timetables, #forciblyRefetch ~ h1 {
+		margin: 0 !important;
+	}
+}
+
 @media screen and (max-width: 420px) {
 	#timetables {
-		margin: 0 !important;
+		margin: 0 -1rem !important;
 	}
 }
 
@@ -131,6 +142,10 @@ body {
 	#timetables > li:hover {
 		-webkit-box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
 		box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+	}
+
+	#forciblyRefetch ~ h1 {
+		color: #2c2c2c;
 	}
 
 	#logs {
@@ -314,6 +329,14 @@ footer {
 	Timetables Page
 */
 
+#analysisButton {
+	background-color: #b2fab4;
+	display: block;
+	margin: auto;
+	padding: 0.5rem 2rem;
+	width: max-content;
+}
+
 #timetables {
 	padding: 0;
 	margin: 0 10vw;
@@ -348,12 +371,25 @@ footer {
 				margin: 0;
 				padding: 0.5rem;
 
+				p {
+					display: inline;
+					font-family: Roboto;
+				}
+
 				div {
+					display: flex;
+					flex-direction: column;
+					justify-content: space-around;
 					width: 50%;
 				}
 
-				.subjectName {
+				.subjectName, .time24h {
 					display: none;
+				}
+
+				.time24h, .time12h {
+					font-family: B612 Mono;
+					font-size: 1rem;
 				}
 			}
 
@@ -363,7 +399,17 @@ footer {
 				}
 
 				.subjectName {
-					display: initial;
+					display: flex;
+				}
+			}
+
+			li.showTimeFor24H {
+				.time24h {
+					display: flex;
+				}
+
+				.time12h {
+					display: none;
 				}
 			}
 
@@ -391,6 +437,18 @@ footer {
 		display: block;
 		margin: auto;
 	}
+}
+
+#forciblyRefetch ~ h1 {
+	color: #ffffff;
+	padding: 0 1rem;
+	margin: 1rem 10vw;
+}
+
+.canvasContainer {
+	position: relative;
+	width: 90vmin;
+	margin: auto;
 }
 
 /*

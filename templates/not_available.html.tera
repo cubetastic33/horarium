@@ -14,6 +14,6 @@ p {
 
 {% block body %}
 <p>
-	To view class {{ class_name }}'s timetable here, please <a href="mailto:aravk33@pm.me">contact me</a>.
+	To view class {{ class_name }}'s timetable here, please <a href="mailto:aravk33@pm.me?subject=Request for addition of class timetable">contact me</a>.
 </p>
 {% endblock %}

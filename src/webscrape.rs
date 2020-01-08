@@ -120,7 +120,7 @@ fn minutes_to_string(minutes: usize) -> String {
 
 fn fix_codes(code: &str, double_classes: bool) -> String {
     String::from(match code {
-        "MJG1" => "MJG",
+        "MJG1" | "MJGA" => "MJG",
         "BJK" => if double_classes { "BJK / IRN" } else { "BJK" }
         "BJS2" => "BJS",
         "EVL1" => "EVL",
@@ -133,12 +133,11 @@ fn fix_codes(code: &str, double_classes: bool) -> String {
 fn convert_code_to_subject(class_code: &str) -> String {
     String::from(match class_code {
         "MPV" | "MJG" | "MVJ" | "MMK" | "MRJ" | "MRPK" => "Math",
-        "BJK" => "Biology",
-        "BGD" => "Zoology",
+        "BGD" | "BJK" => "Zoology",
         "BJS" => "Botany",
-        "CRA" | "CVR" | "CRM" | "CRSA" => "Chemistry",
-        "PSK" | "PGR" | "PAA" | "PRB" => "Physics",
-        "EVL" | "ESB" | "EHM" => "English",
+        "CRA" | "CVR" | "CRM" | "CRSA" | "CUNN" => "Chemistry",
+        "PSK" | "PGR" | "PAA" | "PRB" | "PCM" | "PSOM" => "Physics",
+        "EVL" | "ESB" | "EHM" | "EAB" => "English",
         "IRN" | "IAP" => "Computer Science",
         "BJK / IRN" => "Bio / CS",
         "PET" => "Games",
@@ -146,7 +145,7 @@ fn convert_code_to_subject(class_code: &str) -> String {
     })
 }
 
-fn extract_timetable(source: &str, double_classes: bool) -> Result<Vec<(String, Vec<(String, String, String)>)>, failure::Error> {
+fn extract_timetable(source: &str, double_classes: bool) -> Result<Vec<(String, Vec<(String, String, String, String)>)>, failure::Error> {
     let mut timetables = Vec::new();
     let timetable_page = Html::parse_fragment(source);
     let selector = Selector::parse("table.CSSTableGenerator").unwrap();
@@ -163,37 +162,59 @@ fn extract_timetable(source: &str, double_classes: bool) -> Result<Vec<(String, 
             if class_code.len() == 0 {
                 class_code = row.select(&Selector::parse("td:nth-child(4)").unwrap()).next().unwrap().inner_html();
             }
-            class_code = fix_codes(&class_code, double_classes);
+            class_code = fix_codes(&class_code, double_classes).trim().to_owned();
 
             let times: Vec<_> = time_range.split("-").collect();
             let mut minutes1 = times[0].split(":").collect::<Vec<_>>()[0].parse::<usize>()? * 60 + times[0].split(":").collect::<Vec<_>>()[1].parse::<usize>()?;
             let minutes2 = times[1].split(":").collect::<Vec<_>>()[0].parse::<usize>()? * 60 + times[1].split(":").collect::<Vec<_>>()[1].parse::<usize>()?;
             let mut difference = minutes2 - minutes1;
-            if difference > 50 {
-                if &times[0] == &"8:30" {
-                    print_table.add_row(row!["8:30-9:20", class_code]);
-                    print_table.add_row(row!["9:20-10:00", class_code]);
-                    timetable.push((String::from("8:30-9:20"), class_code.clone(), convert_code_to_subject(&class_code)));
-                    timetable.push((String::from("9:20-10:00"), class_code.clone(), convert_code_to_subject(&class_code)));
-                    if difference > 90 {
-                        print_table.add_row(row!["10:10-10:50", class_code]);
-                        print_table.add_row(row!["10:50-11:30", class_code]);
-                        print_table.add_row(row!["11:30-12:10", class_code]);
-                        timetable.push((String::from("10:10-10:50"), class_code.clone(), convert_code_to_subject(&class_code)));
-                        timetable.push((String::from("10:50-11:30"), class_code.clone(), convert_code_to_subject(&class_code)));
-                        timetable.push((String::from("11:30-12:10"), class_code.clone(), convert_code_to_subject(&class_code)));
+            if difference > 60 {
+                // If we need to split the times
+                if &times[0] == &"08:40" {
+                    print_table.add_row(row!["08:40 - 09:40", class_code]);
+                    print_table.add_row(row!["09:40 - 10:40", class_code]);
+                    timetable.push((String::from("08:40 - 09:40"), String::from("08:40&nbsp;AM - 09:40&nbsp;AM"), class_code.clone(), convert_code_to_subject(&class_code)));
+                    timetable.push((String::from("09:40 - 10:40"), String::from("09:40&nbsp;AM - 10:40&nbsp;AM"), class_code.clone(), convert_code_to_subject(&class_code)));
+                    if difference > 140 {
+                        // If more than 3 periods were covered
+                        print_table.add_row(row!["10:50 - 11:50", class_code]);
+                        print_table.add_row(row!["11:50 - 12:50", class_code]);
+                        timetable.push((String::from("10:50 - 11:50"), String::from("10:50&nbsp;AM - 11:50&nbsp;AM"), class_code.clone(), convert_code_to_subject(&class_code)));
+                        timetable.push((String::from("11:50 - 12:50"), String::from("11:50&nbsp;AM - 12:50&nbsp;PM"), class_code.clone(), convert_code_to_subject(&class_code)));
                     }
-                } else {
+                } else if &times[0] == &"14:50" {
+                    print_table.add_row(row!["14:50 - 15:30", class_code]);
+                    print_table.add_row(row!["15:30 - 16:20", class_code]);
+                    timetable.push((String::from("14:50 - 15:30"), String::from("02:50&nbsp;PM - 02:30&nbsp;PM"), class_code.clone(), convert_code_to_subject(&class_code)));
+                    timetable.push((String::from("15:30 - 16:20"), String::from("03:30&nbsp;PM - 04:20&nbsp;PM"), class_code.clone(), convert_code_to_subject(&class_code)));
+                } else if &times[0] == &"13:20" {
                     while difference > 30 {
-                        print_table.add_row(row![minutes_to_string(minutes1) + "-" + &minutes_to_string(minutes1 + 40), class_code.clone()]);
-                        timetable.push((minutes_to_string(minutes1) + "-" + &minutes_to_string(minutes1 + 40), class_code.clone(), convert_code_to_subject(&class_code)));
+                        print_table.add_row(row![minutes_to_string(minutes1) + " - " + &minutes_to_string(minutes1 + 40), class_code.clone()]);
+                        let start_time_12h = NaiveTime::parse_from_str(&minutes_to_string(minutes1), "%H:%M")?.format("%I:%M&nbsp;%p");
+                        let finish_time_12h = NaiveTime::parse_from_str(&minutes_to_string(minutes1 + 40), "%H:%M")?.format("%I:%M&nbsp;%p");
+                        let time_range_12h = format!("{} - {}", start_time_12h, finish_time_12h);
+                        timetable.push((minutes_to_string(minutes1) + " - " + &minutes_to_string(minutes1 + 40), time_range_12h, class_code.clone(), convert_code_to_subject(&class_code)));
                         minutes1 += 40;
                         difference -= 40;
                     }
+                } else {
+                    while difference >= 60 {
+                        print_table.add_row(row![minutes_to_string(minutes1) + " - " + &minutes_to_string(minutes1 + 60), class_code.clone()]);
+                        let start_time_12h = NaiveTime::parse_from_str(&minutes_to_string(minutes1), "%H:%M")?.format("%I:%M&nbsp;%p");
+                        let finish_time_12h = NaiveTime::parse_from_str(&minutes_to_string(minutes1 + 60), "%H:%M")?.format("%I:%M&nbsp;%p");
+                        let time_range_12h = format!("{} - {}", start_time_12h, finish_time_12h);
+                        timetable.push((minutes_to_string(minutes1) + " - " + &minutes_to_string(minutes1 + 60), time_range_12h, class_code.clone(), convert_code_to_subject(&class_code)));
+                        minutes1 += 60;
+                        difference -= 60;
+                    }
                 }
             } else {
-                print_table.add_row(row![time_range, class_code]);
-                timetable.push((time_range, class_code.clone(), convert_code_to_subject(&class_code)));
+                // The times seem possibly correct, so just use these times
+                print_table.add_row(row![time_range.replace('-', " - "), class_code]);
+                let start_time_12h = NaiveTime::parse_from_str(time_range.split('-').collect::<Vec<_>>()[0], "%H:%M")?.format("%I:%M&nbsp;%p");
+                let finish_time_12h = NaiveTime::parse_from_str(time_range.split('-').collect::<Vec<_>>()[1], "%H:%M")?.format("%I:%M&nbsp;%p");
+                let time_range_12h = format!("{} - {}", start_time_12h, finish_time_12h);
+                timetable.push((time_range.replace('-', " - "), time_range_12h, class_code.clone(), convert_code_to_subject(&class_code)));
             }
         }
         timetables.push((date, timetable));
@@ -210,7 +231,7 @@ pub fn scrape_timetables(class_name: &str) -> Result<Vec<Timetable>, failure::Er
         "XI A₁" => ("<enrollment no>", "<id>", "<password>"),
         "XI A₂" => ("<enrollment no>", "<id>", "<password>"),
         "XI A₃" => ("<enrollment no>", "<id>", "<password>"),
-        "XI A₄" => ("", "", ""),
+        "XI A₄" => ("<enrollment no>", "<id>", "<password>"),
         "XI Z₁" => ("<enrollment no>", "<id>", "<password>"),
         "XI Z₂" => ("<enrollment no>", "<id>", "<password>"),
         "XI ESP" => ("<enrollment no>", "<id>", "<password>"),

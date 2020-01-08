@@ -1,3 +1,8 @@
+$('#analysisButton').click(function (e) {
+	e.preventDefault();
+	$('html, body').animate({ scrollTop: $('#analysis').offset().top }, 800);
+});
+
 $('#timetables > li').click(function (e) {
 	var element = this;
 	if (!$(element).hasClass('open')) {
@@ -91,7 +96,7 @@ function subscribeUserToPush() {
 		});
 }
 
-if ('Notification' in window && (localStorage['lastShownNotificationDialog'] === undefined || ((Date.now() - localStorage['lastShownNotificationDialog']) / 86400000) >= 7)) {
+if ('Notification' in window && (localStorage['lastShownNotificationDialog'] === undefined || ((Date.now() - localStorage['lastShownNotificationDialog']) / 86400000) >= 30)) {
 	$('.overlay').show();
 	$('#notificationRequestDialog').show('slow');
 	$('#acceptNotificationRequest').click(function () {

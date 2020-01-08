@@ -1,4 +1,4 @@
-const CACHE_NAME = 'static-cache-v6';
+const CACHE_NAME = 'static-cache-v9';
 
 const FILES_TO_CACHE = [
 	'/',
@@ -7,6 +7,7 @@ const FILES_TO_CACHE = [
 	'/styles/main.css',
 	'/scripts/jquery-3.4.1.min.js',
 	'/scripts/jquery-ui-1.12.1.custom/jquery-ui.min.js',
+	'/scripts/main.js',
 	'/scripts/timetable.js',
 	'/images/favicon-32x32.png',
 	'/images/favicon-16x16.png',
@@ -19,6 +20,7 @@ const FILES_TO_CACHE = [
 	'/fonts/Roboto/Roboto-Regular.ttf',
 	'/fonts/Roboto/Roboto-Medium.ttf',
 	'/fonts/Hind_Vadodara/HindVadodara-Medium.ttf',
+	'/fonts/B612_Mono/B612Mono-Regular.ttf',
 ];
 
 self.addEventListener('install', (evt) => {

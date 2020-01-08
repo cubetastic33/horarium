@@ -16,6 +16,12 @@ mod db_operations;
 
 use db_operations::*;
 
+#[derive(Serialize, Debug)]
+struct Analysis {
+    name: String,
+    aggregate_time: i64,
+}
+
 #[derive(Serialize)]
 struct ClassDetails {
     name: String,
@@ -30,13 +36,14 @@ struct Context {
 #[derive(Serialize, Clone)]
 pub struct Timetable {
     day: String,
-    classes: Vec<(String, String, String)>,
+    classes: Vec<(String, String, String, String)>,
 }
 
 #[derive(Serialize)]
 pub struct TimetableList {
     class_name: String,
     timetables: Vec<Timetable>,
+    analyses: Option<[Vec<Analysis>; 2]>,
 }
 
 #[derive(Serialize)]
@@ -119,14 +126,18 @@ fn index_route() -> Template {
 
 #[get("/<class_url>")]
 fn get_timetable_page(conn: State<Mutex<Connection>>, class_url: String) -> Result<Option<Template>, failure::Error> {
-    return if ["xia4"].contains(&class_url.as_ref()) {
+    return if ["xiz1"].contains(&class_url.as_ref()) {
+        // If the class is in the blacklist
         Ok(Some(Template::render("not_available", TimetableList {
             class_name: class_url_to_name(&class_url),
             timetables: Vec::new(),
+            analyses: None,
         })))
-    } else if ["xia1", "xia2", "xia3", "xiz1", "xiz2", "xiesp"].contains(&class_url.as_ref()) {
+    } else if ["xia1", "xia2", "xia3", "xia4", "xiz2", "xiesp"].contains(&class_url.as_ref()) {
+        // If the class is valid
         Ok(Some(Template::render("timetable", get_timetables(&conn.lock().unwrap(), class_url)?)))
     } else {
+        // If the class is not valid
         Ok(None)
     };
 }

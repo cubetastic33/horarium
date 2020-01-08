@@ -7,6 +7,7 @@
 {% endblock %}
 
 {% block body %}
+<a id="analysisButton" class="button unelevatedButton" href="#analysis">↓ Analysis</a>
 <ul id="timetables">
 	{% for timetable in timetables %}
 	<li>
@@ -17,9 +18,10 @@
 			</li>
 			{% for row in timetable.classes %}
 			<li>
-				<div>{{ row[0] }}</div>
-				<div class="classCode">{{ row[1] }}</div>
-				<div class="subjectName">{{ row[2] }}</div>
+				<div class="time24h"><span>{{ row[0] | replace(from=":", to="<p>:</p>") }}</span></div>
+				<div class="time12h"><span>{{ row[1] | safe | replace(from=":", to="<p>:</p>") | replace(from=" ", to="<p> </p>") }}</span></div>
+				<div class="classCode"><span>{{ row[2] }}</span></div>
+				<div class="subjectName"><span>{{ row[3] }}</span></div>
 			</li>
 			{% endfor %}
 		</ul>
@@ -28,6 +30,25 @@
 </ul>
 <br>
 <button id="forciblyRefetch" class="textButton">Forcibly Refetch</button>
+<br>
+<hr>
+<h1 id="analysis"><i class="material-icons">trending_up</i> Analysis</h1>
+<section class="canvasContainer">
+	<canvas id="analysisChart">
+		<p>
+			Your browser does not support HTML5 canvas elements :(
+		</p>
+	</canvas>
+</section>
+<br>
+<section class="canvasContainer">
+	<canvas id="thisWeekAnalysisChart">
+		<p>
+			Your browser does not support HTML5 canvas elements :(
+		</p>
+	</canvas>
+</section>
+<br>
 <div class="overlay"></div>
 <div id="notificationRequestDialog" class="dialog">
 	<div class="dialogContent">
@@ -49,4 +70,33 @@
 {% block javascript %}
 <script src="/scripts/jquery-ui-1.12.1.custom/jquery-ui.min.js"></script>
 <script src="/scripts/timetable.js"></script>
+<script src="/scripts/Chart.bundle.min.js"></script>
+<script>
+// The reason this stuff is so convoluted is because it has to show the subjects properly even if some subjects aren't present in both weeks' timetables
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var aggregate_classes_this_week = {};
+var aggregate_classes_last_week = {};
+{% for analysis in analyses[0] %}
+aggregate_classes_this_week['{{ analysis.name | safe }}'] = +(Math.round({{ analysis.aggregate_time }} / 60 + "e+2")  + "e-2");
+{% endfor %}
+{% for analysis in analyses[1] %}
+aggregate_classes_last_week['{{ analysis.name | safe }}'] = +(Math.round({{ analysis.aggregate_time }} / 60 + "e+2")  + "e-2");
+{% endfor %}
+
+var subjects = Object.keys(_objectSpread({}, aggregate_classes_this_week, {}, aggregate_classes_last_week));
+
+var aggregate_times_this_week = [];
+var aggregate_times_last_week = [];
+
+for (var i = 0; i < subjects.length; i++) {
+	aggregate_times_this_week.push(aggregate_classes_this_week[subjects[i]] ? aggregate_classes_this_week[subjects[i]] : 0);
+	aggregate_times_last_week.push(aggregate_classes_last_week[subjects[i]] ? aggregate_classes_last_week[subjects[i]] : 0);
+}
+</script>
+<script async src="/scripts/analysis.js"></script>
 {% endblock %}

@@ -65,8 +65,18 @@
 					</div>
 					<br>
 					<div class="formInput toggleSwitch">
+						<input type="checkbox" id="showOldTimetables" autocomplete="off">
+						<label for="showOldTimetables">Show old timetables of the current week <span></span></label>
+					</div>
+					<br>
+					<div class="formInput toggleSwitch">
 						<input type="checkbox" id="showSubjectNames" autocomplete="off">
 						<label for="showSubjectNames">Show subject names instead of class codes <span></span></label>
+					</div>
+					<br>
+					<div class="formInput toggleSwitch">
+						<input type="checkbox" id="time24h" autocomplete="off">
+						<label for="time24h">Show time in the 24 hour format <span></span></label>
 					</div>
 					<br><br>
 					<div class="buttons">
@@ -81,7 +91,7 @@
 <div id="toast"></div>
 <footer>
 	<div>
-		© 12019 <a href="https://en.wikipedia.org/wiki/Holocene_calendar" class="exception">HE</a>
+		© 12020 <a href="https://en.wikipedia.org/wiki/Holocene_calendar" class="exception">HE</a>
 		| Website designed and coded by
 		<a href="https://github.com/cubetastic33" class="exception">Aravindan</a>
 	</div>
